@@ -3,11 +3,13 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # تحديد إصدار نظام التشغيل لضمان التوافق
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
       - name: Buildozer Action
-        uses: ArtemSerebrennkov/buildozer-action@v1
+        uses: GearUp-Dev/buildozer-action@v2
         with:
-          python_version: 3.8
-          buildozer_version: master
+          python_version: 3.10
+          buildozer_version: stable
+          # هذا الـ Action سيقوم بالبناء وإخراج الملف في قسم Artifacts
