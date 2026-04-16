@@ -7,6 +7,7 @@ from kivy.uix.label import Label
 from kivy.uix.recycleview import RecycleView
 from kivy.clock import Clock
 from datetime import datetime
+from plyer import notification # مكتبة الإشعارات
 
 class StudyTimerApp(App):
     def build(self):
@@ -16,26 +17,23 @@ class StudyTimerApp(App):
         self.root = BoxLayout(orientation='vertical', padding=10, spacing=10)
         
         # واجهة الإدخال
-        input_area = BoxLayout(size_hint_y=None, height=50, spacing=5)
-        self.task_input = TextInput(hint_text='اسم المادة/المهمة', multiline=False)
-        self.time_input = TextInput(hint_text='HH:MM (24h)', size_hint_x=0.4, multiline=False)
-        add_btn = Button(text='+', size_hint_x=0.2, on_release=self.add_task)
+        input_area = BoxLayout(size_hint_y=None, height=120, orientation='vertical', spacing=5)
+        self.task_input = TextInput(hint_text='اسم المادة (مثال: فيزياء)', multiline=False)
+        self.time_input = TextInput(hint_text='الوقت (مثال: 18:30)', multiline=False)
+        add_btn = Button(text='إضافة للمهامات', background_color=(0, 0.7, 0, 1), on_release=self.add_task)
         
         input_area.add_widget(self.task_input)
         input_area.add_widget(self.time_input)
         input_area.add_widget(add_btn)
         
-        self.root.add_widget(Label(text="جدول الدراسة الذكي", size_hint_y=None, height=40, font_size=24))
+        self.root.add_widget(Label(text="منظم دراستي", size_hint_y=None, height=50, font_size=28))
         self.root.add_widget(input_area)
         
-        # عرض المهام
         self.task_list = RecycleView()
         self.root.add_widget(self.task_list)
         
-        # تحديث القائمة وفحص التنبيهات كل ثانية
-        Clock.schedule_interval(self.check_alarms, 1)
+        Clock.schedule_interval(self.check_alarms, 10) # فحص كل 10 ثوانٍ
         self.update_list()
-        
         return self.root
 
     def add_task(self, *args):
@@ -48,15 +46,18 @@ class StudyTimerApp(App):
             self.time_input.text = ""
 
     def update_list(self):
-        self.task_list.data = [{'text': f"{t['time']} - {t['text']}"} for t in self.tasks]
+        self.task_list.data = [{'text': f"⏰ {t['time']} - {t['text']}"} for t in self.tasks]
 
     def check_alarms(self, dt):
         now = datetime.now().strftime("%H:%M")
         for task in self.tasks:
             if task['time'] == now:
-                print(f"ALARM: وقت دراسة {task['text']}")
-                # ملاحظة: لإرسال إشعارات فعلية للنظام، نحتاج مكتبة plyer 
-                # الكود هنا يطبع في الكونسول، سيعمل كإشعار عند الربط بـ Buildozer
+                notification.notify(
+                    title="حان وقت الدراسة!",
+                    message=f"لديك الآن: {task['text']}",
+                    app_name="StudyPlanner",
+                    timeout=20 # مدة ظهور الإشعار
+                )
 
     def save_tasks(self):
         with open("tasks.json", "w") as f:
@@ -66,8 +67,7 @@ class StudyTimerApp(App):
         try:
             with open("tasks.json", "r") as f:
                 self.tasks = json.load(f)
-        except:
-            self.tasks = []
+        except: self.tasks = []
 
 if __name__ == '__main__':
     StudyTimerApp().run()
